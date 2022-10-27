@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -9,52 +10,52 @@ import org.springframework.web.client.RestTemplate;
 
 public class WeatherClient {
 
-  public static void main(String[] args) {
-    final String sensorName = "Sensor_test";
-    registerSensor(sensorName);
+    public static void main(String[] args) {
+        final String sensorName = "Sensor6";
+        registerSensor(sensorName);
+        System.out.println("Sensor " + sensorName + " is registered.");
 
+        Random random = new Random();
+        double minTemperature = -100.0;
+        double maxTemperature = 100.0;
+        for (int i = 0; i < 500; i++) {
+            System.out.println(i);
+            sendMeasurement(random.nextDouble() * (2 * maxTemperature) + minTemperature,//in order to get a positive or negative double
+                    random.nextBoolean(), sensorName);
+        }
 
-    Random random = new Random();
-    double minTemperature = -100.0;
-    double maxTemperature = 100.0;
-    for (int i = 0; i < 500; i++) {
-      System.out.println(i);
-      sendMeasurement(random.nextDouble() * maxTemperature,
-          random.nextBoolean(), sensorName);
     }
 
-  }
+    private static void sendMeasurement(double value, boolean raining, String sensorName) {
+        final String url = "http://localhost:8080/measurements/add";
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("value", value);
+        jsonData.put("raining", raining);
+        jsonData.put("sensor", Map.of("name", sensorName));
 
-  private static void sendMeasurement(double value, boolean raining, String sensorName) {
-    final String url = "http://localhost:8080/measurements/add";
-    Map<String, Object> jsonData = new HashMap<>();
-    jsonData.put("value", value);
-    jsonData.put("raining", raining);
-    jsonData.put("sensor", Map.of("name", sensorName));
-
-    makePostRequestWithJSONData(url, jsonData);
-  }
-
-  private static void registerSensor(String sensorName) {
-    final String url = "http://localhost:8080/sensors/registration";
-    Map<String, Object> jsonData = new HashMap<>();
-    jsonData.put("name", sensorName);
-
-    makePostRequestWithJSONData(url, jsonData);
-  }
-
-  private static void makePostRequestWithJSONData(String url, Map<String, Object> jsonData) {
-    final RestTemplate restTemplate = new RestTemplate();
-    final HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    HttpEntity<Object> request = new HttpEntity<>(jsonData, headers);
-    try {
-      restTemplate.postForObject(url, request, String.class);
-      System.out.println("Successfully sent!");
-    } catch (HttpClientErrorException e) {
-      System.out.println("Error!");
-      System.out.println(e.getMessage());
+        makePostRequestWithJSONData(url, jsonData);
     }
-  }
+
+    private static void registerSensor(String sensorName) {
+        final String url = "http://localhost:8080/sensors/registration";
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("name", sensorName);
+
+        makePostRequestWithJSONData(url, jsonData);
+    }
+
+    private static void makePostRequestWithJSONData(String url, Map<String, Object> jsonData) {
+        final RestTemplate restTemplate = new RestTemplate();
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Object> request = new HttpEntity<>(jsonData, headers);
+        try {
+            restTemplate.postForObject(url, request, String.class);
+            System.out.println("Successfully sent!");
+        } catch (HttpClientErrorException e) {
+            System.out.println("Error!");
+            System.out.println(e.getMessage());
+        }
+    }
 
 }
